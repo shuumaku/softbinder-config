@@ -37,6 +37,7 @@ public class BindsActivity extends Screen {
 
     private void render() {
         clear();
+        item("Add bind", () -> BindEditor.edit(this, data, null, this::render));
         for (final Bind b : data.binds) {
             String name = Apps.label(this, b.pkg);
             String shown = b.key + "  " + (char) 0xB7 + "  " + (b.label.isEmpty() ? "(no label)" : b.label)
@@ -45,7 +46,6 @@ public class BindsActivity extends Screen {
                     shown + "\n" + Presets.describe(this, b.action, b.param),
                     () -> BindEditor.edit(this, data, b, this::render));
         }
-        item("Add bind", () -> BindEditor.edit(this, data, null, this::render));
         if (error != null)
             note("Root unavailable: " + error);
     }
