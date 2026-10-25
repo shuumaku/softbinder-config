@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +34,7 @@ import java.util.function.Consumer;
 /** The add/edit form for one bind. */
 final class BindDialog {
     interface Listener {
-        void onSave(Bind bind);
+        void onSave(Bind bind, Runnable close);
 
         void onDelete();
     }
@@ -89,14 +90,18 @@ final class BindDialog {
         form.addView(text(a, "Action"));
         final Spinner action = spinner(a, Bind.ACTIONS, b.action);
         form.addView(action);
-        final TextView hint = text(a, Bind.HINTS[action.getSelectedItemPosition()]);
-        form.addView(hint);
+        form.addView(text(a, "Parameter"));
         final EditText param = field(a, b.param);
+        param.setHint(Bind.HINTS[action.getSelectedItemPosition()]);
+        final Button launchPick = button(a, "Choose what to launch...", v -> pickLaunch(a, pkg[0], param));
+        form.addView(launchPick);
         form.addView(param);
+        launchPick.setVisibility(Bind.ACTIONS[action.getSelectedItemPosition()].equals("launch") ? View.VISIBLE : View.GONE);
         action.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> p, View v, int i, long id) {
-                hint.setText(Bind.HINTS[i]);
+                param.setHint(Bind.HINTS[i]);
+                launchPick.setVisibility(Bind.ACTIONS[i].equals("launch") ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -120,21 +125,25 @@ final class BindDialog {
         ScrollView scroll = new ScrollView(a);
         scroll.addView(form);
         AlertDialog.Builder d = new AlertDialog.Builder(a).setView(scroll)
-                .setPositiveButton("Save", (x, w) -> {
-                    Bind out = new Bind();
-                    out.pkg = pkg[0].trim();
-                    out.key = Bind.KEYS[key.getSelectedItemPosition()];
-                    out.label = label.getText().toString().trim();
-                    out.action = Bind.ACTIONS[action.getSelectedItemPosition()];
-                    out.param = param.getText().toString().trim();
-                    out.window = Bind.WINDOWS[when.getSelectedItemPosition()];
-                    out.activity = activity[0].trim();
-                    listener.onSave(out);
-                })
+                .setPositiveButton("Save", null)
                 .setNegativeButton("Cancel", null);
         if (existing != null)
             d.setNeutralButton("Delete", (x, w) -> listener.onDelete());
-        d.show();
+        final AlertDialog dialog = d.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+        // Set after show() so a rejected save leaves the dialog (and its input) open.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            Bind out = new Bind();
+            out.pkg = pkg[0].trim();
+            out.key = Bind.KEYS[key.getSelectedItemPosition()];
+            out.label = label.getText().toString().trim();
+            out.action = Bind.ACTIONS[action.getSelectedItemPosition()];
+            out.param = param.getText().toString().trim();
+            out.window = Bind.WINDOWS[when.getSelectedItemPosition()];
+            out.activity = activity[0].trim();
+            listener.onSave(out, dialog::dismiss);
+        });
     }
 
     /**
@@ -156,6 +165,54 @@ final class BindDialog {
         button.setText(s);
     }
 
+    /** Full class names of the activities the app declares */
+    private static List<String> activitiesOf(Activity a, String pkg) {
+        List<String> out = new ArrayList<String>();
+        try {
+            PackageInfo pi = a.getPackageManager().getPackageInfo(pkg, PackageManager.GET_ACTIVITIES);
+            if (pi.activities != null)
+                for (ActivityInfo ai : pi.activities)
+                    out.add(ai.name);
+        } catch (PackageManager.NameNotFoundException e) {
+            // not installed
+        }
+        return out;
+    }
+
+    /**
+     * Fills the launch parameter
+     */
+    private static void pickLaunch(final Activity a, final String pkg, final EditText param) {
+        String[] items = { "Installed apps", "Current app activities", "Other (scheme://uri)" };
+        new AlertDialog.Builder(a).setItems(items, (d, i) -> {
+            if (i == 0) {
+                pickApp(a, "", chosen -> param.setText(chosen));
+            } else if (i == 1) {
+                if (pkg.isEmpty()) {
+                    Toast.makeText(a, "Choose an app first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                final List<String> full = activitiesOf(a, pkg);
+                if (full.isEmpty()) {
+                    Toast.makeText(a, "No activities found (is the app installed?)", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Collections.sort(full, String::compareToIgnoreCase);
+                final String[] shown = new String[full.size()];
+                for (int n = 0; n < shown.length; n++)
+                    shown[n] = full.get(n).startsWith(pkg + ".") ? full.get(n).substring(pkg.length()) : full.get(n);
+                new AlertDialog.Builder(a).setItems(shown, (x, n) -> param.setText(pkg + "/" + shown[n])).show();
+            } else {
+                final EditText typed = field(a, param.getText().toString().contains("://")
+                        ? param.getText().toString() : "");
+                typed.setHint("scheme://uri");
+                new AlertDialog.Builder(a).setTitle("Scheme / URI").setView(typed)
+                        .setPositiveButton("OK", (x, w) -> param.setText(typed.getText().toString().trim()))
+                        .setNegativeButton("Cancel", null).show();
+            }
+        }).show();
+    }
+
     private static void showActivity(Button button, String activity) {
         button.setText(activity.isEmpty() ? "Any activity" : activity);
     }
@@ -163,14 +220,8 @@ final class BindDialog {
     private static void pickActivity(final Activity a, final String pkg, final String current,
             final Consumer<String> chosen) {
         final List<String> names = new ArrayList<String>();
-        try {
-            PackageInfo pi = a.getPackageManager().getPackageInfo(pkg, PackageManager.GET_ACTIVITIES);
-            if (pi.activities != null)
-                for (ActivityInfo ai : pi.activities)
-                    names.add(ai.name.startsWith(pkg + ".") ? ai.name.substring(pkg.length()) : ai.name);
-        } catch (PackageManager.NameNotFoundException e) {
-            // not installed: only "Any" and "Other" are offered
-        }
+        for (String full : activitiesOf(a, pkg))
+            names.add(full.startsWith(pkg + ".") ? full.substring(pkg.length()) : full);
         Collections.sort(names, String::compareToIgnoreCase);
         final String[] items = new String[names.size() + 2];
         items[0] = "Any activity";

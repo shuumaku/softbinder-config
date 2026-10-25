@@ -16,7 +16,7 @@ final class BindEditor {
     static void edit(final Screen s, final Store.Data data, final Bind existing, final Runnable onChanged) {
         BindDialog.show(s, existing, new BindDialog.Listener() {
             @Override
-            public void onSave(final Bind b) {
+            public void onSave(final Bind b, final Runnable close) {
                 if (b.pkg.isEmpty()) {
                     s.toast("Choose an app");
                     return;
@@ -28,10 +28,14 @@ final class BindEditor {
                 String warning = StockApps.warning(s, b.pkg);
                 if (warning == null) {
                     commit(s, data, b, existing, onChanged);
+                    close.run();
                     return;
                 }
                 new AlertDialog.Builder(s).setTitle("Stock OEM app").setMessage(warning)
-                        .setPositiveButton("Save anyway", (d, w) -> commit(s, data, b, existing, onChanged))
+                        .setPositiveButton("Save anyway", (d, w) -> {
+                            commit(s, data, b, existing, onChanged);
+                            close.run();
+                        })
                         .setNegativeButton("Cancel", null).show();
             }
 
