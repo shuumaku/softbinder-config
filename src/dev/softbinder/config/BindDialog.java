@@ -2,7 +2,9 @@ package dev.softbinder.config;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.text.InputFilter;
@@ -50,8 +52,14 @@ final class BindDialog {
 
         form.addView(text(a, "App"));
         final String[] pkg = { b.pkg };
+        final String[] activity = { b.activity };
+        final Button activityButton = button(a, "", null);
         final Button app = button(a, "", null);
         app.setOnClickListener(v -> pickApp(a, pkg[0], chosen -> {
+            if (!chosen.equals(pkg[0])) {
+                activity[0] = "";
+                showActivity(activityButton, activity[0]);
+            }
             pkg[0] = chosen;
             showApp(a, app, chosen);
         }));
@@ -70,9 +78,13 @@ final class BindDialog {
         form.addView(text(a, "When"));
         final Spinner when = spinnerAt(a, Bind.WINDOW_NAMES, Bind.indexOf(Bind.WINDOWS, b.window));
         form.addView(when);
-        form.addView(text(a, "Only in activity (optional, e.g. .SearchActivity)"));
-        final EditText activity = field(a, b.activity);
-        form.addView(activity);
+        form.addView(text(a, "Only in activity (optional)"));
+        activityButton.setOnClickListener(v -> pickActivity(a, pkg[0], activity[0], chosen -> {
+            activity[0] = chosen;
+            showActivity(activityButton, chosen);
+        }));
+        showActivity(activityButton, activity[0]);
+        form.addView(activityButton);
 
         form.addView(text(a, "Action"));
         final Spinner action = spinner(a, Bind.ACTIONS, b.action);
@@ -116,7 +128,7 @@ final class BindDialog {
                     out.action = Bind.ACTIONS[action.getSelectedItemPosition()];
                     out.param = param.getText().toString().trim();
                     out.window = Bind.WINDOWS[when.getSelectedItemPosition()];
-                    out.activity = activity.getText().toString().trim();
+                    out.activity = activity[0].trim();
                     listener.onSave(out);
                 })
                 .setNegativeButton("Cancel", null);
@@ -144,9 +156,43 @@ final class BindDialog {
         button.setText(s);
     }
 
-    /**
-     * Launchable apps with their icons; the first row types a package name by hand.
-     */
+    private static void showActivity(Button button, String activity) {
+        button.setText(activity.isEmpty() ? "Any activity" : activity);
+    }
+
+    private static void pickActivity(final Activity a, final String pkg, final String current,
+            final Consumer<String> chosen) {
+        final List<String> names = new ArrayList<String>();
+        try {
+            PackageInfo pi = a.getPackageManager().getPackageInfo(pkg, PackageManager.GET_ACTIVITIES);
+            if (pi.activities != null)
+                for (ActivityInfo ai : pi.activities)
+                    names.add(ai.name.startsWith(pkg + ".") ? ai.name.substring(pkg.length()) : ai.name);
+        } catch (PackageManager.NameNotFoundException e) {
+            // not installed: only "Any" and "Other" are offered
+        }
+        Collections.sort(names, String::compareToIgnoreCase);
+        final String[] items = new String[names.size() + 2];
+        items[0] = "Any activity";
+        for (int i = 0; i < names.size(); i++)
+            items[i + 1] = names.get(i);
+        items[items.length - 1] = "Other...";
+        new AlertDialog.Builder(a).setItems(items, (d, i) -> {
+            if (i == 0) {
+                chosen.accept("");
+            } else if (i < items.length - 1) {
+                chosen.accept(items[i]);
+            } else {
+                final EditText typed = field(a, current);
+                typed.selectAll();
+                new AlertDialog.Builder(a).setTitle("Activity (end of its name, e.g. .SearchActivity)")
+                    .setView(typed)
+                    .setPositiveButton("OK", (x, w) -> chosen.accept(typed.getText().toString().trim()))
+                    .setNegativeButton("Cancel", null).show();
+            }
+        }).show();
+    }
+
     private static void pickApp(final Activity a, final String current, final Consumer<String> chosen) {
         final PackageManager pm = a.getPackageManager();
         final List<ApplicationInfo> apps = new ArrayList<ApplicationInfo>();
