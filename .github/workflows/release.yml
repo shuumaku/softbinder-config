@@ -1,5 +1,5 @@
 # Builds the APK and, for a tag like v0.0.1, publishes it as a GitHub release.
-# The tag must match versionName in AndroidManifest.xml.
+# The tag must match versionName in AndroidManifest.xml. Pushing the same tag again replaces the release APK.
 # Secrets (optional; without them the APK is signed with a throwaway key and cannot update an earlier release):
 #   SIGNING_KEYSTORE  base64 of the keystore file
 #   SIGNING_PASSWORD  keystore and key password
@@ -53,4 +53,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "softbinder-config-${GITHUB_REF_NAME}.apk" --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          apk="softbinder-config-${GITHUB_REF_NAME}.apk"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$apk" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$apk" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
