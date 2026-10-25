@@ -13,7 +13,11 @@ final class Bind {
             "up, down, left or right",
             "KEYCODE_NAME or number" };
 
-    String pkg = "", key = "F3", label = "", action = ACTIONS[0], param = "";
+    /** When a bind applies: the app's main window, a dialog or menu, with the keyboard up, or any window. */
+    static final String[] WINDOWS = { "base", "dialog", "ime", "any" };
+    static final String[] WINDOW_NAMES = { "Main window", "Dialog or menu", "Keyboard showing", "Any window" };
+
+    String pkg = "", key = "F3", label = "", action = ACTIONS[0], param = "", window = WINDOWS[0], activity = "";
 
     static Bind fromJson(JSONObject o) {
         Bind b = new Bind();
@@ -22,14 +26,25 @@ final class Bind {
         b.label = o.optString("label");
         b.action = o.optString("action", b.action);
         b.param = o.optString("param");
+        b.window = o.optString("window", b.window);
+        b.activity = o.optString("activity");
         return b;
     }
 
-    /** One line of the file */
+    /** One line of the file; "window" and "activity" are only written when they are not the default. */
     String json(int index) {
         return "{\"index\": " + index + ", \"app\": " + quote(pkg) + ", \"key\": " + quote(key) + ", \"label\": "
                 + quote(label)
-                + ", \"action\": " + quote(action) + ", \"param\": " + quote(param) + "}";
+                + ", \"action\": " + quote(action) + ", \"param\": " + quote(param)
+                + (window.equals(WINDOWS[0]) ? "" : ", \"window\": " + quote(window))
+                + (activity.isEmpty() ? "" : ", \"activity\": " + quote(activity)) + "}";
+    }
+
+    /** Short description of when this bind applies, or "" for the default (main window, any activity). */
+    String context() {
+        String w = window.equals(WINDOWS[0]) ? "" : WINDOW_NAMES[indexOf(WINDOWS, window)];
+        String a = activity.isEmpty() ? "" : activity.substring(activity.lastIndexOf('.') + 1);
+        return w.isEmpty() ? a : a.isEmpty() ? w : w + ", " + a;
     }
 
     static String quote(String s) {

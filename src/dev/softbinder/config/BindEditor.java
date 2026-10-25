@@ -43,12 +43,13 @@ final class BindEditor {
         });
     }
 
-    /** One bind per (package, key): the newest wins. */
+    /** One bind per (package, key, window, activity): the newest wins. */
     private static void commit(Screen s, Store.Data data, Bind b, Bind replaced, Runnable onChanged) {
         data.binds.remove(replaced);
         for (Iterator<Bind> it = data.binds.iterator(); it.hasNext();) {
             Bind o = it.next();
-            if (o.pkg.equals(b.pkg) && o.key.equals(b.key))
+            if (o.pkg.equals(b.pkg) && o.key.equals(b.key) && o.window.equals(b.window)
+                    && o.activity.equals(b.activity))
                 it.remove();
         }
         data.binds.add(b);

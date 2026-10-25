@@ -67,6 +67,13 @@ final class BindDialog {
         label.setFilters(new InputFilter[] { new InputFilter.LengthFilter(10) });
         form.addView(label);
 
+        form.addView(text(a, "When"));
+        final Spinner when = spinnerAt(a, Bind.WINDOW_NAMES, Bind.indexOf(Bind.WINDOWS, b.window));
+        form.addView(when);
+        form.addView(text(a, "Only in activity (optional, e.g. .SearchActivity)"));
+        final EditText activity = field(a, b.activity);
+        form.addView(activity);
+
         form.addView(text(a, "Action"));
         final Spinner action = spinner(a, Bind.ACTIONS, b.action);
         form.addView(action);
@@ -108,6 +115,8 @@ final class BindDialog {
                     out.label = label.getText().toString().trim();
                     out.action = Bind.ACTIONS[action.getSelectedItemPosition()];
                     out.param = param.getText().toString().trim();
+                    out.window = Bind.WINDOWS[when.getSelectedItemPosition()];
+                    out.activity = activity.getText().toString().trim();
                     listener.onSave(out);
                 })
                 .setNegativeButton("Cancel", null);
@@ -238,6 +247,13 @@ final class BindDialog {
         b.setText(s);
         b.setOnClickListener(l);
         return b;
+    }
+
+    private static Spinner spinnerAt(Activity a, String[] values, int selected) {
+        Spinner s = new Spinner(a);
+        s.setAdapter(new ArrayAdapter<String>(a, android.R.layout.simple_spinner_dropdown_item, values));
+        s.setSelection(selected);
+        return s;
     }
 
     private static Spinner spinner(Activity a, String[] values, String selected) {

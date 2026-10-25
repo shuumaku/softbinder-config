@@ -39,7 +39,8 @@ public class BindsActivity extends Screen {
         clear();
         for (final Bind b : data.binds) {
             String name = Apps.label(this, b.pkg);
-            String shown = b.key + "  " + (char) 0xB7 + "  " + (b.label.isEmpty() ? "(no label)" : b.label);
+            String shown = b.key + "  " + (char) 0xB7 + "  " + (b.label.isEmpty() ? "(no label)" : b.label)
+                    + (b.context().isEmpty() ? "" : "  " + (char) 0xB7 + "  " + b.context());
             item(Apps.icon(this, b.pkg), (StockApps.warning(this, b.pkg) != null ? "(!) " : "") + name, 18,
                     shown + "\n" + Presets.describe(this, b.action, b.param),
                     () -> BindEditor.edit(this, data, b, this::render));

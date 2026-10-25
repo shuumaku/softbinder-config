@@ -43,12 +43,6 @@ public class MainActivity extends Screen {
     private void render() {
         clear();
         item("Binds (" + data.binds.size() + ")", () -> startActivity(new Intent(this, BindsActivity.class)));
-        item("Add bind", () -> {
-            if (error != null)
-                toast("Root unavailable");
-            else
-                BindEditor.edit(this, data, null, this::render);
-        });
         item("Debug log: " + (data.debug ? "on" : "off"), () -> {
             if (error != null) {
                 toast("Root unavailable");
