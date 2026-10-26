@@ -5,10 +5,7 @@ import android.app.AlertDialog;
 import java.io.IOException;
 import java.util.Iterator;
 
-/**
- * Add / edit / delete a bind, with the stock-app warning, writing the result
- * straight to the config file.
- */
+
 final class BindEditor {
     private BindEditor() {
     }
@@ -51,7 +48,6 @@ final class BindEditor {
         });
     }
 
-    /** One bind per (package, key, window, activity): the newest wins. */
     private static void commit(Screen s, Store.Data data, Bind b, Bind replaced, Runnable onChanged) {
         data.binds.remove(replaced);
         for (Iterator<Bind> it = data.binds.iterator(); it.hasNext();) {

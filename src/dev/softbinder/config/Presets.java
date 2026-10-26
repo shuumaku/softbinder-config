@@ -1,9 +1,5 @@
 package dev.softbinder.config;
 
-/**
- * Ready-made actions. Targets were launched on the device; apps missing on
- * another phone simply fail to start.
- */
 final class Presets {
     static final class Preset {
         final String name, label, action, param;
@@ -46,10 +42,6 @@ final class Presets {
     private Presets() {
     }
 
-    /**
-     * A short description of what a bind does: the preset's name, or a
-     * plain-English rendering.
-     */
     static String describe(android.content.Context ctx, String action, String param) {
         for (Preset p : ALL)
             if (p.action.equals(action) && p.param.equals(param))

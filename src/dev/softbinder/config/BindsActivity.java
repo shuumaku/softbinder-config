@@ -4,7 +4,6 @@ import android.os.Bundle;
 
 import java.io.IOException;
 
-/** The bind list: one numbered row per bind, then Add bind. */
 public class BindsActivity extends Screen {
     private Store.Data data = new Store.Data();
     private String error;

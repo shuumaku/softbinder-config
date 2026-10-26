@@ -16,10 +16,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Laid out like the stock apps' About page: icon, then label/value pairs, then
- * the licence button.
- */
 public class AboutActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {

@@ -13,8 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Stock OEM apps that use the softkey bar (assets/stock_apps.json: [{"app",
- * "risk", "note"}]).
+ * Stock OEM apps that use the softkey bar
  */
 final class StockApps {
     private static Map<String, String[]> apps;

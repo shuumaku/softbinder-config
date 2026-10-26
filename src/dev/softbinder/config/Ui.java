@@ -10,7 +10,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/** The stock-settings look: grey title bar, numbered rows, thin dividers. */
 final class Ui {
     private static final int BAR = 0xFFE0E0E0, BADGE = 0xFF4A4044, LINE = 0xFFC8C8C8, FOCUS = 0xFFC5E1FF;
 

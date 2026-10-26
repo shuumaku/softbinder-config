@@ -5,12 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
-/** Runs one command through su. Blocking: call off the main thread. */
 final class Root {
     private Root() {
     }
 
-    /** Runs one command through su and returns its raw stdout (for binary output such as a PNG). */
     static byte[] bytes(String cmd) throws IOException {
         Process p = new ProcessBuilder("su", "-c", cmd).redirectErrorStream(false).start();
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();

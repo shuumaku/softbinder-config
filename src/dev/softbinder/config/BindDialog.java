@@ -150,10 +150,6 @@ final class BindDialog {
         });
     }
 
-    /**
-     * The selected app: its name, with the package under it; just the package if
-     * the app isn't installed.
-     */
     private static void showApp(Activity a, Button button, String pkg) {
         String name = Apps.label(a, pkg);
         if (pkg.isEmpty()) {
@@ -169,7 +165,6 @@ final class BindDialog {
         button.setText(s);
     }
 
-    /** Full class names of the activities the app declares */
     private static List<String> activitiesOf(Activity a, String pkg) {
         List<String> out = new ArrayList<String>();
         try {
