@@ -69,6 +69,8 @@ final class Presets {
                 return "Broadcast " + param;
             case "swipe":
                 return "Swipe " + param;
+            case "tap":
+                return "Tap " + param;
             default:
                 return "Press " + param;
         }

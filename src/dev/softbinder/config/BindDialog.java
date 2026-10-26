@@ -95,13 +95,17 @@ final class BindDialog {
         param.setHint(Bind.HINTS[action.getSelectedItemPosition()]);
         final Button launchPick = button(a, "Choose what to launch...", v -> pickLaunch(a, pkg[0], param));
         form.addView(launchPick);
+        final Button tapPick = button(a, "Pick from screenshot...", v -> ShotPicker.start(a, pkg[0], param));
+        form.addView(tapPick);
         form.addView(param);
         launchPick.setVisibility(Bind.ACTIONS[action.getSelectedItemPosition()].equals("launch") ? View.VISIBLE : View.GONE);
+        tapPick.setVisibility(Bind.ACTIONS[action.getSelectedItemPosition()].equals("tap") ? View.VISIBLE : View.GONE);
         action.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> p, View v, int i, long id) {
                 param.setHint(Bind.HINTS[i]);
                 launchPick.setVisibility(Bind.ACTIONS[i].equals("launch") ? View.VISIBLE : View.GONE);
+                tapPick.setVisibility(Bind.ACTIONS[i].equals("tap") ? View.VISIBLE : View.GONE);
             }
 
             @Override

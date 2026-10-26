@@ -5,12 +5,13 @@ import org.json.JSONObject;
 /** One entry of the module's "binds" list. */
 final class Bind {
     static final String[] KEYS = { "F1", "F2", "F3", "F4" };
-    static final String[] ACTIONS = { "launch", "intent", "broadcast", "swipe", "key" };
+    static final String[] ACTIONS = { "launch", "intent", "broadcast", "swipe", "tap", "key" };
     static final String[] HINTS = {
             "package, package/.Class, or scheme://uri",
             "intent action, then an optional data uri",
             "intent action, then an optional package",
             "up, down, left or right",
+            "x y in screen pixels, e.g. 540 1200",
             "KEYCODE_NAME or number" };
 
     /** When a bind applies: the app's main window, a dialog or menu, with the keyboard up, or any window. */

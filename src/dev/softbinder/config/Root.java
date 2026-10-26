@@ -10,6 +10,28 @@ final class Root {
     private Root() {
     }
 
+    /** Runs one command through su and returns its raw stdout (for binary output such as a PNG). */
+    static byte[] bytes(String cmd) throws IOException {
+        Process p = new ProcessBuilder("su", "-c", cmd).redirectErrorStream(false).start();
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        try {
+            java.io.InputStream in = p.getInputStream();
+            byte[] buf = new byte[65536];
+            for (int n; (n = in.read(buf)) > 0;)
+                out.write(buf, 0, n);
+            if (!p.waitFor(10, TimeUnit.SECONDS)) {
+                p.destroy();
+                throw new IOException("su timed out");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("interrupted");
+        }
+        if (p.exitValue() != 0)
+            throw new IOException("su failed (" + p.exitValue() + ")");
+        return out.toByteArray();
+    }
+
     static String run(String cmd) throws IOException {
         Process p = new ProcessBuilder("su", "-c", cmd).redirectErrorStream(true).start();
         StringBuilder out = new StringBuilder();

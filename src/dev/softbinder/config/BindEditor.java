@@ -25,6 +25,10 @@ final class BindEditor {
                     s.toast("The action needs a parameter");
                     return;
                 }
+                if (b.action.equals("tap") && !b.param.matches("\\d+\\s+\\d+")) {
+                    s.toast("Tap needs x and y, e.g. 540 1200");
+                    return;
+                }
                 String warning = StockApps.warning(s, b.pkg);
                 if (warning == null) {
                     commit(s, data, b, existing, onChanged);
