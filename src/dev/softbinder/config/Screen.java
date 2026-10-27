@@ -1,7 +1,9 @@
 package dev.softbinder.config;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -12,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * A numbered list screen: rows are numbered in order, and pressing a digit key
@@ -21,6 +24,8 @@ abstract class Screen extends Activity {
     final ExecutorService io = Executors.newSingleThreadExecutor();
     private LinearLayout list;
     private final List<Runnable> actions = new ArrayList<Runnable>();
+    private final SparseArray<Consumer<Intent>> results = new SparseArray<Consumer<Intent>>();
+    private int nextRequest = 100;
 
     /** Call from onCreate. */
     void setup(String title) {
@@ -57,6 +62,20 @@ abstract class Screen extends Activity {
         t.setText(text);
         t.setPadding(Ui.dp(this, 12), Ui.dp(this, 12), Ui.dp(this, 12), 0);
         list.addView(t);
+    }
+
+    void startForResult(Intent intent, Consumer<Intent> done) {
+        int code = nextRequest++;
+        results.put(code, done);
+        startActivityForResult(intent, code);
+    }
+
+    @Override
+    protected void onActivityResult(int code, int result, Intent data) {
+        Consumer<Intent> done = results.get(code);
+        results.remove(code);
+        if (done != null)
+            done.accept(result == RESULT_OK ? data : null);
     }
 
     void toast(String s) {

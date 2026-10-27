@@ -46,7 +46,7 @@ final class BindDialog {
      * @param existing the bind being edited, or null for a new one (the dialog
      *                 never modifies it).
      */
-    static void show(final Activity a, Bind existing, final Listener listener) {
+    static void show(final Screen a, Bind existing, final Listener listener) {
         Bind b = existing != null ? existing : new Bind();
         LinearLayout form = new LinearLayout(a);
         form.setOrientation(LinearLayout.VERTICAL);
@@ -95,10 +95,11 @@ final class BindDialog {
         param.setHint(Bind.HINTS[action.getSelectedItemPosition()]);
         final Button launchPick = button(a, "Choose what to launch...", v -> pickLaunch(a, pkg[0], param));
         form.addView(launchPick);
-        final Button tapPick = button(a, "Pick from screenshot...", v -> ShotPicker.start(a, pkg[0], param));
+        final Button tapPick = button(a, "Pick from an image...", v -> ShotPicker.start(a, param));
         form.addView(tapPick);
         form.addView(param);
-        launchPick.setVisibility(Bind.ACTIONS[action.getSelectedItemPosition()].equals("launch") ? View.VISIBLE : View.GONE);
+        launchPick.setVisibility(
+                Bind.ACTIONS[action.getSelectedItemPosition()].equals("launch") ? View.VISIBLE : View.GONE);
         tapPick.setVisibility(Bind.ACTIONS[action.getSelectedItemPosition()].equals("tap") ? View.VISIBLE : View.GONE);
         action.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
@@ -203,7 +204,8 @@ final class BindDialog {
                 new AlertDialog.Builder(a).setItems(shown, (x, n) -> param.setText(pkg + "/" + shown[n])).show();
             } else {
                 final EditText typed = field(a, param.getText().toString().contains("://")
-                        ? param.getText().toString() : "");
+                        ? param.getText().toString()
+                        : "");
                 typed.setHint("scheme://uri");
                 new AlertDialog.Builder(a).setTitle("Scheme / URI").setView(typed)
                         .setPositiveButton("OK", (x, w) -> param.setText(typed.getText().toString().trim()))
@@ -236,9 +238,9 @@ final class BindDialog {
                 final EditText typed = field(a, current);
                 typed.selectAll();
                 new AlertDialog.Builder(a).setTitle("Activity (end of its name, e.g. .SearchActivity)")
-                    .setView(typed)
-                    .setPositiveButton("OK", (x, w) -> chosen.accept(typed.getText().toString().trim()))
-                    .setNegativeButton("Cancel", null).show();
+                        .setView(typed)
+                        .setPositiveButton("OK", (x, w) -> chosen.accept(typed.getText().toString().trim()))
+                        .setNegativeButton("Cancel", null).show();
             }
         }).show();
     }
